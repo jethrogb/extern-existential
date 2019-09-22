@@ -2,12 +2,14 @@
 
 #[macro_export]
 macro_rules! extern_existential {
-    ( extern existential type $i:ident: $tr:path = $ty:path; ) => {
+    ( $(#[$m:meta])* extern existential type $i:ident: $tr:path = $ty:path; ) => {
+        $(#[$m])*
         #[no_mangle]
         pub static $i: &(dyn $tr + Send + Sync + 'static) = &$ty;
     };
-    ( pub extern existential type $i:ident: $tr:path; ) => {
-        pub struct $i;
+    ( $(#[$m:meta])* $v:vis extern existential type $i:ident: $tr:path; ) => {
+        $(#[$m])*
+        $v struct $i;
 
         impl core::ops::Deref for $i {
             type Target = dyn $tr + 'static;
@@ -18,7 +20,7 @@ macro_rules! extern_existential {
             #[inline(always)]
             fn deref(&self) -> &(dyn $tr + 'static) {
                 #[allow(improper_ctypes)]
-                extern "C" {
+                extern "Rust" {
                     static $i: &'static (dyn $tr + Send + Sync + 'static);
                 }
 
